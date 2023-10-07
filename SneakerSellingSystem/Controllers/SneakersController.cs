@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SneakerSellingSystem.Data;
+using SneakerSellingSystem.Data.Models;
 using SneakerSellingSystem.Models.Sneakers;
 
 namespace SneakerSellingSystem.Controllers
@@ -21,15 +22,30 @@ namespace SneakerSellingSystem.Controllers
         [HttpPost]
         public IActionResult Add(AddSneakerFormModel sneaker)
         {
-            if (sneaker.Categories == null)
+            if (!this.data.Categories.Any(c => c.Id == sneaker.CategoryId))
             {
-                sneaker.Categories = this.GetCategories();
+                this.ModelState.AddModelError(nameof(sneaker.CategoryId), "Category doesn't exist!");
             }
 
             if (!ModelState.IsValid)
             {
+                sneaker.Categories = this.GetCategories();
+
                 return View(sneaker);
             }
+
+            var sneakerData = new Sneaker
+            {
+                Brand = sneaker.Brand,
+                Model = sneaker.Model,
+                Color = sneaker.Color,
+                Description = sneaker.Description,
+                ImageUrl = sneaker.ImageUrl,
+                CategoryId = sneaker.CategoryId,
+            };
+
+            this.data.Sneakers.Add(sneakerData);
+            this.data.SaveChanges();
 
             return RedirectToAction("Index", "Home");
         }
